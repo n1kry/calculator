@@ -10,27 +10,20 @@ public class Calculator {
         String formatString = expression.replaceAll("\\s", "");
         formatString = formatString.replaceAll("\\)\\(", ")*(");
 
-        Pattern pattern = Pattern.compile("[-+*/]-\\(");
+        Pattern pattern = Pattern.compile("[-+*/(]-\\(");
         Matcher matcher = pattern.matcher(formatString);
 
         while (matcher.find()) {
-//            System.out.println(matcher.group());
             formatString = formatString.replace(matcher.group(), matcher.group().charAt(0)+"-1*(");
         }
         pattern = Pattern.compile("[0-9]\\(");
         matcher = pattern.matcher(formatString);
 
         while (matcher.find()) {
-//            System.out.println(matcher.group());
             formatString = formatString.replace(matcher.group(), matcher.group().charAt(0)+"*(");
         }
 
-        pattern = Pattern.compile("^-\\(");
-        matcher = pattern.matcher(formatString);
-
-        if (matcher.find()) {
-            formatString = formatString.replace(matcher.group(), "-1*(");
-        }
+        formatString = formatString.replaceAll("^-\\(", "-1*(");
 
         long openBrackets = formatString.chars().filter(ch -> ch == '(').count();
         long closeBrackets = formatString.chars().filter(ch -> ch == ')').count();
@@ -79,7 +72,6 @@ public class Calculator {
                     ops.push(tokens[i]);
                 }
 
-                //else----
                 // Handle closing parentheses
                 else if (tokens[i] == ')') {
                     while (!ops.empty() && ops.peek() != '(') {
@@ -141,7 +133,6 @@ public class Calculator {
         return (op1 != '*' && op1 != '/') || (op2 != '+' && op2 != '-');
     }
 
-    //-(-1) = 1 ; (1+1)(1+1) = 4 | "- == -1*" && ")( == * || 1-9( == *"
     // Test the code
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
