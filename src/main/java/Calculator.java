@@ -10,12 +10,19 @@ public class Calculator {
         String formatString = expression.replaceAll("\\s", "");
         formatString = formatString.replaceAll("\\)\\(", ")*(");
 
-        Pattern pattern = Pattern.compile("[-,+,*,/]-\\(");
+        Pattern pattern = Pattern.compile("[-+*/]-\\(");
         Matcher matcher = pattern.matcher(formatString);
 
         while (matcher.find()) {
-            System.out.println(matcher.group());
+//            System.out.println(matcher.group());
             formatString = formatString.replace(matcher.group(), matcher.group().charAt(0)+"-1*(");
+        }
+        pattern = Pattern.compile("[0-9]\\(");
+        matcher = pattern.matcher(formatString);
+
+        while (matcher.find()) {
+//            System.out.println(matcher.group());
+            formatString = formatString.replace(matcher.group(), matcher.group().charAt(0)+"*(");
         }
 
         pattern = Pattern.compile("^-\\(");
@@ -43,7 +50,7 @@ public class Calculator {
 
         char[] tokens = formattingString(expression);
         System.out.println(tokens);
-        boolean negtivePermision = true;
+        boolean negativePermission = true;
 
         // Stack for operands
         Stack<Integer> values = new Stack<>();
@@ -54,7 +61,7 @@ public class Calculator {
         try {
             for (int i = 0; i < tokens.length; i++) {
                 // Push operands onto the stack
-                if (tokens[i] >= '0' && tokens[i] <= '9' || negtivePermision && tokens[i] == '-') {
+                if (tokens[i] >= '0' && tokens[i] <= '9' || negativePermission && tokens[i] == '-') {
                     StringBuilder sb = new StringBuilder();
                     if (tokens[i] == '-') {
                         sb.append(tokens[i++]);
@@ -63,7 +70,7 @@ public class Calculator {
                         sb.append(tokens[i++]);
                     }
                     values.push(Integer.parseInt(sb.toString()));
-                    negtivePermision = false;
+                    negativePermission = false;
                     i--;
                 }
 
@@ -90,7 +97,7 @@ public class Calculator {
                         values.push(applyOp(ops.pop(), values.pop(), values.pop()));
                     }
                     ops.push(tokens[i]);
-                    negtivePermision = true;
+                    negativePermission = true;
                 }
             }
 
@@ -109,16 +116,20 @@ public class Calculator {
     // Apply the operator to the two operands
     public static int applyOp(char op, int b, int a) {
         switch (op) {
-            case '+':
+            case '+' -> {
                 return a + b;
-            case '-':
+            }
+            case '-' -> {
                 return a - b;
-            case '*':
+            }
+            case '*' -> {
                 return a * b;
-            case '/':
+            }
+            case '/' -> {
                 if (b == 0)
                     throw new UnsupportedOperationException("Cannot divide by zero");
                 return a / b;
+            }
         }
         return 0;
     }
