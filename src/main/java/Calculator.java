@@ -1,29 +1,58 @@
-import javax.xml.transform.TransformerException;
 import java.util.EmptyStackException;
 import java.util.Scanner;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Calculator {
-    public static int evaluate(String expression) {
-        char[] tokens = expression.toCharArray();
 
+    public static char[] formattingString(String expression) {
+        String formatString = expression.replaceAll("\\s", "");
+        formatString = formatString.replaceAll("\\)\\(", ")*(");
+
+        Pattern pattern = Pattern.compile("[-,+,*,/]-\\(");
+        Matcher matcher = pattern.matcher(formatString);
+
+        while (matcher.find()) {
+            System.out.println(matcher.group());
+            formatString = formatString.replace(matcher.group(), matcher.group().charAt(0)+"-1*(");
+        }
+
+        pattern = Pattern.compile("^-\\(");
+        matcher = pattern.matcher(formatString);
+
+        if (matcher.find()) {
+            formatString = formatString.replace(matcher.group(), "-1*(");
+        }
+
+        long openBrackets = formatString.chars().filter(ch -> ch == '(').count();
+        long closeBrackets = formatString.chars().filter(ch -> ch == ')').count();
+        long newSize = openBrackets - closeBrackets;
+
+        char[] tokens = new char[(int) (formatString.length() + newSize)];
+
+        System.arraycopy(formatString.toCharArray(),0,tokens,0,formatString.length());
+
+        for (int i = formatString.length(); i < tokens.length; i++) {
+            tokens[i] = ')';
+        }
+
+        return tokens;
+    }
+    public static int evaluate(String expression) {
+
+        char[] tokens = formattingString(expression);
+        System.out.println(tokens);
         boolean negtivePermision = true;
 
-        int closeBracket = 0;
-        int openBracket = 0;
         // Stack for operands
-        Stack<Integer> values = new Stack<Integer>();
+        Stack<Integer> values = new Stack<>();
 
         // Stack for Operators
-        Stack<Character> ops = new Stack<Character>();
+        Stack<Character> ops = new Stack<>();
 
         try {
             for (int i = 0; i < tokens.length; i++) {
-                // Skip whitespace
-                if (tokens[i] == ' ') {
-                    continue;
-                }
-
                 // Push operands onto the stack
                 if (tokens[i] >= '0' && tokens[i] <= '9' || negtivePermision && tokens[i] == '-') {
                     StringBuilder sb = new StringBuilder();
@@ -41,13 +70,11 @@ public class Calculator {
                 // Handle opening parentheses
                 else if (tokens[i] == '(') {
                     ops.push(tokens[i]);
-                    openBracket++;
                 }
 
                 //else----
                 // Handle closing parentheses
-                if (tokens[i] == ')') {
-                    closeBracket++;
+                else if (tokens[i] == ')') {
                     while (!ops.empty() && ops.peek() != '(') {
                         values.push(applyOp(ops.pop(), values.pop(), values.pop()));
                     }
@@ -65,9 +92,6 @@ public class Calculator {
                     ops.push(tokens[i]);
                     negtivePermision = true;
                 }
-
-                if (i == tokens.length - 1 && openBracket - closeBracket != 0)
-                    tokens = addBracket(tokens, openBracket - closeBracket);
             }
 
             // Evaluate remaining expressions
@@ -80,15 +104,6 @@ public class Calculator {
         }
         // Final result is the only element on the stack
         return values.pop();
-    }
-
-    public static char[] addBracket(char[] initArr, int size) {
-        char[] newArr = new char[initArr.length + size];
-        System.arraycopy(initArr, 0, newArr, 0, initArr.length);
-        for (int i = initArr.length; i < initArr.length + size; i++) {
-            newArr[i] = ')';
-        }
-        return newArr;
     }
 
     // Apply the operator to the two operands
@@ -115,6 +130,7 @@ public class Calculator {
         return (op1 != '*' && op1 != '/') || (op2 != '+' && op2 != '-');
     }
 
+    //-(-1) = 1 ; (1+1)(1+1) = 4 | "- == -1*" && ")( == * || 1-9( == *"
     // Test the code
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
