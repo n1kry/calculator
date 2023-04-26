@@ -1,10 +1,12 @@
 package logic;
 
+import exceptions.InvalidExpressionException;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ExpressionFormatter {
-    public static char[] render(String expression) {
+    public static char[] render(String expression) throws InvalidExpressionException {
         String formatString = expression.replaceAll("\\s", "");
         formatString = formatString.replaceAll("\\)\\(", ")*(");
 
@@ -25,16 +27,11 @@ public final class ExpressionFormatter {
 
         long openBrackets = formatString.chars().filter(ch -> ch == '(').count();
         long closeBrackets = formatString.chars().filter(ch -> ch == ')').count();
-        long newSize = openBrackets - closeBrackets;
 
-        char[] tokens = new char[(int) (formatString.length() + newSize)];
-
-        System.arraycopy(formatString.toCharArray(),0,tokens,0,formatString.length());
-
-        for (int i = formatString.length(); i < tokens.length; i++) {
-            tokens[i] = ')';
+        if(openBrackets - closeBrackets != 0){
+            throw new InvalidExpressionException("Wrong number of brackets");
         }
 
-        return tokens;
+        return formatString.toCharArray();
     }
 }
